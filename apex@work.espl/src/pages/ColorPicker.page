@@ -1,0 +1,144 @@
+<apex:page controller="PageStyleHandler" sidebar="false" showHeader="false" showChat="false">
+
+    <apex:includeScript value="{!URLFOR($Resource.jquery, '/jquery-ui-1.11.2.custom/external/jquery/jquery.js')}"  />
+    <apex:includeScript value="{!URLFOR($Resource.jsColor, 'jscolor/jscolor.js')}" />
+    <apex:includeScript value="{!URLFOR($Resource.jQueryColorPicker,'colpick-jQuery-Color-Picker-master/js/colpick.js')}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.jQueryColorPicker,'colpick-jQuery-Color-Picker-master/css/colpick.css')}"/>
+
+    <script type="text/javascript">
+        $j = jQuery.noConflict();
+
+        // Fetch the String value from Parent window and call the ApexFunction on Document load.
+        $j(document).ready(function(){
+            var strStyleString = window.opener.returnString();
+            
+            if(strStyleString != ''){
+                $j("input[id$='styleValue']").val(strStyleString);
+                resolveStyle();
+                
+                var strArr = strStyleString.split(";");
+                for(i = 0; i < strArr.length; i++){
+                    if(strArr[i] != ''){
+                        strArr[i] = strArr[i].trim();
+                        var altSplit = strArr[i].split(':');
+                        if(altSplit[0] == "color"){
+                            $j("input[id$='colorInputTextId']").val(altSplit[1].trim());
+                        }
+                    }
+                }
+            }
+        });
+
+        //Update the value in the parent window with the generated Style String.
+        function postValue() {
+            var styleValue = $j("input[id$='styleValue']").val();
+            window.opener.updateStyleValue(styleValue);
+            closeWindow();
+        }
+
+        //Function to rerender the font-weight section via actionFunction.
+        function rerenderFontWeight(){
+            rerenderWeight();
+        }
+        // Function to rerender the font-family section via actionFunction 
+        function rerenderFontfamily(){
+            rerenderFontFamily();
+        }
+        //Function to close the current window.
+        function closeWindow(){
+            window.close();
+        }
+    </script>
+    
+    <style>
+        .overlayStatus
+        {
+            position:fixed;
+            left:0;
+            top:0;
+            width:100%;
+            height:100%;
+            text-align:center;
+            vertical-align: middle;
+            background-color: #dcdcdc;
+            opacity:0.6;
+            filter:alpha(opacity=60);
+            z-index: 20 ;
+        }
+       
+        .loadIMG
+        {
+            display:block;
+            margin-top:15%;
+            margin-left:auto;
+            margin-right:auto;
+            text-align:center;
+            vertical-align: middle;
+        }
+       
+        .loadLabel
+        {
+            font-weight:bold;
+            font-size:14px;
+            color:black;
+        }
+    </style>
+
+    <apex:form >
+        <apex:actionFunction name="rerenderWeight" rerender="stylePageBlockId"/>
+        <apex:actionFunction name="rerenderFontFamily" rerender="stylePageBlockId"/>
+        <apex:actionFunction name="resolveStyle" rerender="stylePageBlockId" action="{!parseStyleString}" status="processStatus"/>
+
+        <apex:pageBlock >
+            <apex:pageBlockSection id="stylePageBlockId" title="Choose Style Attributes" collapsible="false" columns="2">
+                <apex:pageBlockSectionItem id="fontFamilySectionItemId">
+                    <apex:outputLabel value="Font-Family:"/>
+                    <apex:selectList id="fontFamilySelectId" value="{!strFontFamily}" size="1" onchange="rerenderFontfamily();">
+                        <apex:selectOptions value="{!FontNames}"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel layout="block">
+                    <apex:outputLabel style="font-family: {!strFontFamily};" id="fontFamilyLabelId" value="{!strFontFamily}" rendered="{!strFontFamily != 'None'}"/>
+                </apex:outputPanel>
+
+                <apex:pageBlockSectionItem id="fontWeightSectionItemId">
+                    <apex:outputLabel value="Font-Weight:"/>
+                        <apex:selectList id="fontWeightSelectId" value="{!strFontweight}" size="1" onchange="rerenderFontWeight();">
+                            <apex:selectOptions value="{!fontWeightOptions}"/>
+                        </apex:selectList>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel layout="block">
+                    <apex:outputLabel style="font-weight: {!strFontweight};" id="fontWeightLabelId" value="{!strFontweight}" rendered="{!strFontweight != 'None'}"/>
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection id="colorSectionId" columns="2">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="Color:"/>
+                    <apex:inputText id="colorInputTextId" styleClass="color" value="{!strColor}"/>
+                </apex:pageBlockSectionItem>
+                <apex:outputPanel layout="block">
+                    <apex:outputLabel />
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockButtons location="bottom">
+                <apex:CommandButton action="{!saveStyleCss}" value="Save" rerender="styleValue" oncomplete="postValue();" title="Save"/>
+                <apex:CommandButton value="Cancel" rerender="styleValue" onClick="closeWindow();" title="Cancel"/>
+            </apex:pageBlockButtons>
+        </apex:pageblock>
+
+        <apex:inputHidden id="styleValue" value="{!strStyleString}"/>
+
+    </apex:form>
+    
+    <apex:actionStatus id="processStatus" layout="block">
+    <apex:facet name="start">
+        <apex:outputPanel styleClass="overlayStatus">
+            <apex:image value="/img/loading32.gif" styleClass="loadIMG" />
+            <apex:outputLabel value="Processing..." styleClass="loadLabel" />
+        </apex:outputPanel>
+    </apex:facet>
+    <apex:facet name="stop" />
+</apex:actionstatus>
+</apex:page>

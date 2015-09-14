@@ -1,0 +1,36 @@
+<apex:page controller="stylePageHandler" >
+    <apex:includeScript value="{!URLFOR($Resource.jquery, '/jquery-ui-1.11.2.custom/external/jquery/jquery.js')}"  />
+
+    <script>
+        $j = jQuery.noConflict();
+        function redirectToStylePage() {
+            window.open('ColorPicker', 'popup',
+  'width=600,height=500,top=50,left=500,toolbar=no,location=no,directories=no,status=no,menubar=no, scrollbars=yes,resizable=yes,copyhistory=no');
+        }
+        
+        function returnString() {
+            var styleValue = $j("input[id$='colorFont']").val();
+            return styleValue;
+        }
+        
+        function updateStyleValue(styleValue) {
+            $j("input[id$='colorFont']").val(styleValue);
+        }
+    </script>
+
+    <apex:form >
+
+   Style : &nbsp;
+    <apex:inputText id="colorFont" styleClass="color" value="{!StyleString}"  rendered="true" />
+        <apex:commandLink onclick="redirectToStylePage();" rerender="styleRerender" value="CommandLink" />
+        <apex:pageBlock >
+            <apex:pageBlockSection >
+                <apex:commandButton value="save" action="{!savethis}" rerender="styleRerender"/>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <apex:OutputPanel id="styleRerender">
+        {!StyleString}
+        </apex:OutputPanel>
+    </apex:form>
+
+</apex:page>
